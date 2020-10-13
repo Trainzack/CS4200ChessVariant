@@ -11,9 +11,9 @@ class Variant:
     def getStartingFEN(self) -> str:
         """Returns the starting FEN"""
         # TODO
-        return ""
+        return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
 
     def getFairyStockfishINI(self) -> str:
         """Returns the fairystockfish ini file that defines this variant"""
         # TODO
-        return ""
+        return "[variant:chess]\n startFen = " + self.getStartingFEN()

@@ -4,6 +4,8 @@ from Engine import Engine
 from Variant import Variant
 import socket
 from datetime import date
+import pyffish
+import random
 
 class Match:
     """
@@ -90,10 +92,9 @@ class MatchRunner:
     def __init__(self):
 
 
-        self.whiteEngine: Engine = Engine(depth=6)
-        self.blackEngine: Engine = Engine(depth=6)
+        self.whiteEngine: Engine = Engine(depth=16)
+        self.blackEngine: Engine = Engine(depth=16)
         self.engines = (self.whiteEngine, self.blackEngine)
-
 
     def runMatches(self, variant:Variant, matchCount = 100, debug=False) -> MatchData:
 
@@ -101,22 +102,42 @@ class MatchRunner:
 
         matchData = MatchData()
 
+        variantPath: str = "variant-{0}.ini".format(variant.getVariantName())
+        with open(variantPath, "w") as ini:
+            ini.write(variant.getFairyStockfishINI())
+
+        pyffish.set_option("VariantPath", variantPath)
+
         for e in self.engines:
             # Set the engines to the variant we are running.
-            e.setVariant(variant)
+            e.setVariant(variant, variantPath)
 
         for matchNo in range(matchCount):
+
 
             match = Match(variant)
 
             for e in self.engines:
                 e.newgame()
 
-            # TODO: add MCTS here
+            # Go through a MCTS opening
+            for i in range(10):
+                legal_moves = pyffish.legal_moves(variant.getVariantName(), variant.getStartingFEN(), match.moves)
+                if len(legal_moves) == 0:
+                    # Checkmate!
+                    if i % 2 == 0:
+                        match.markBlackVictory()
+                    else:
+                        match.markWhiteVictory()
+                    break
+
+                move = legal_moves[random.randint(0,len(legal_moves)-1)]
+                # TODO: Apply MCTS algorithm
+                match.moves.append(move)
+
 
             # This is the loop that goes through the moves in any individual game
             while True:
-                print(len(match.moves))
                 # Don't let too many moves happen!
                 if len(match.moves) > 200:
                     match.markDraw()
@@ -152,4 +173,5 @@ class MatchRunner:
                         break
                 # Add the matches we just played to the match data.
             matchData.matches.append(match)
+            print(match)
         return matchData

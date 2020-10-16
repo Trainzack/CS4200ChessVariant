@@ -6,7 +6,7 @@ def testEngine():
 
     runner = MatchRunner()
 
-    matchData = runner.runMatches(ArchBishopVariant(), 2, debug=True)
+    matchData = runner.runMatches(ArchBishopVariant(), 100, debug=False)
 
     for match in matchData.matches:
         print(match)

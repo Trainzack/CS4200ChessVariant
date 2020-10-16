@@ -98,7 +98,7 @@ class Engine(subprocess.Popen):
         if stdout.find('No such') >= 0:
             print("stockfish was unable to set option %s" % optionname)
 
-    def setVariant(self, variant:Variant, writeIni=True):
+    def setVariant(self, variant:Variant, variantPath=None):
         """
         Changes the variant that this engine is playing.
         :param variant: The variant that we want to set this engine to
@@ -107,10 +107,7 @@ class Engine(subprocess.Popen):
         """
         self.variant = variant
 
-        if writeIni:
-            variantPath:str = "variant-{0}.ini".format(variant.getVariantName())
-            with open(variantPath, "w") as ini:
-                ini.write(variant.getFairyStockfishINI())
+        if variantPath is not None:
             self.setoption("VariantPath", variantPath)
         self.setoption("UCI_Variant", variant.getVariantName())
 

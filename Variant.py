@@ -89,7 +89,7 @@ class ArchBishopVariant(Variant):
     def getFairyStockfishINI(self) -> str:
         """Returns the fairystockfish ini file that defines this variant"""
         # TODO
-        return "[{0}]\nstartFen = {1}\narchbishop = a".format(self.getVariantName(), self.getStartingFEN())
+        return "[{0}:chess]\nstartFen = {1}\narchbishop = a".format(self.getVariantName(), self.getStartingFEN())
 
     def getVariantName(self) -> str:
         """Returns the name of this variant, as in its variant.ini file"""

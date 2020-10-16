@@ -1,4 +1,9 @@
 #  Based off of pystockfish
+# This handles the backend communication between our python program and any UCI engine
+# It is set to use fairy stockfish to start with.
+
+import subprocess
+from Variant import Variant, ChessVariant
 
 class Engine(subprocess.Popen):
     """
@@ -30,17 +35,22 @@ class Engine(subprocess.Popen):
     engines.
     """
 
-    def __init__(self, depth=2, ponder=False, param={}, rand=False, rand_min=-10, rand_max=10, args='stockfish'):
+    def __init__(self, depth=2, param={}, args=("fairy-stockfish_x86-64.exe")):
+        """
+
+        :param depth: The depth to which the engine will think each move. Default is 2.
+        :param param: A dictionary of UCI values to send to the engine upon the initialization of this class.
+        :param args: A tuple containing the command to start the engine, followed by any CLAs
+        """
         subprocess.Popen.__init__(self,
                                   args,
                                   universal_newlines=True,
                                   stdin=subprocess.PIPE,
                                   stdout=subprocess.PIPE, )
+        # ("fairy-stockfish_x86-64.exe", "load", "variants.ini")
         self.depth = str(depth)
-        self.ponder = ponder
         self.put('uci')
-        if not ponder:
-            self.setoption('Ponder', False)
+        self.variant: Variant = ChessVariant()
 
         base_param = {
             "Write Debug Log": "false",
@@ -55,11 +65,12 @@ class Engine(subprocess.Popen):
             "Minimum Thinking Time": 20,
             "Slow Mover": 80,
             "UCI_Chess960": "false",
+            "Ponder": False,
         }
 
-        if rand:
-            base_param['Contempt'] = randint(rand_min, rand_max),
-            base_param['Contempt Factor'] = randint(rand_min, rand_max),
+        #if rand:
+        #    base_param['Contempt'] = randint(rand_min, rand_max),
+        #    base_param['Contempt Factor'] = randint(rand_min, rand_max),
 
         base_param.update(param)
         self.param = base_param
@@ -74,6 +85,7 @@ class Engine(subprocess.Popen):
         self.isready()
 
     def put(self, command):
+        # print(command)
         self.stdin.write(command + '\n')
         self.stdin.flush()
 
@@ -86,11 +98,25 @@ class Engine(subprocess.Popen):
         if stdout.find('No such') >= 0:
             print("stockfish was unable to set option %s" % optionname)
 
-    def setposition(self, moves=[]):
+    def setVariant(self, variant:Variant, variantPath=None):
+        """
+        Changes the variant that this engine is playing.
+        :param variant: The variant that we want to set this engine to
+        :param writeIni: Whether we should write the result of variant's getFairyStockfishINI() call to a file and have fairyStockfish read it.
+        :return:none
+        """
+        self.variant = variant
+
+        if variantPath is not None:
+            self.setoption("VariantPath", variantPath)
+        self.setoption("UCI_Variant", variant.getVariantName())
+
+    def setposition(self, moves=()):
         """
         Move list is a list of moves (i.e. ['e2e4', 'e7e5', ...]) each entry as a string.  Moves must be in full algebraic notation.
         """
-        self.put('position startpos moves %s' % self._movelisttostr(moves))
+        self.put('position fen {0} moves {1}'.format(self.variant.getStartingFEN(), self._movelisttostr(moves)))
+        # self.put('position startpos moves %s' % self._movelisttostr(moves))
         self.isready()
 
     def setfenposition(self, fen):
@@ -112,17 +138,31 @@ class Engine(subprocess.Popen):
             movestr += h + ' '
         return movestr.strip()
 
-    def bestmove(self):
+    def bestmove(self) -> dict:
+        """
+
+        :return: A dictionary with three K,V pairs:
+        'move', and the best move,
+        'ponder' and any ponder move,
+        'info' and the line of info that stockfish gives
+        Additionally, if mate is found, then it will include the pair
+        'mate' and the number of moves till mate (sign indicates which engine has mate. >0 for this engine, <0 for the other engine)
+        """
         last_line = ""
         self.go()
         while True:
             text = self.stdout.readline().strip()
             split_text = text.split(' ')
             if split_text[0] == 'bestmove':
-                return {'move': split_text[1],
+                moveInfo = {'move': split_text[1],
                         'ponder': split_text[3] if len(split_text) > 2 else "(none)", # Added by Eli to fix bug
-                        'info': last_line
-                }
+                        'info': last_line}
+                mateloc = last_line.find('mate')
+                if mateloc >= 0:
+                    nodesloc = last_line.find('nodes') # Note: this assumes that mate will always be followed by nodes, a bold assumption
+                    matenum = int(last_line[mateloc + 5:nodesloc])
+                    moveInfo['mate'] = matenum
+                return moveInfo
             last_line = text
 
     def isready(self):
@@ -130,7 +170,14 @@ class Engine(subprocess.Popen):
         Used to synchronize the python engine object with the back-end engine.  Sends 'isready' and waits for 'readyok.'
         """
         self.put('isready')
-        while True:
+        retryCount: int = 20
+        while retryCount > 0:
             text = self.stdout.readline().strip()
+            # print("Waiting: {0}".format(text))
             if text == 'readyok':
                 return text
+            elif text == '':
+                retryCount -= 1
+            else:
+                retryCount = 20
+        raise ConnectionAbortedError("Engine did not return isready!")

@@ -1,16 +1,19 @@
-# This is a sample Python script.
+from Engine import Engine
+from Variant import *
+from MatchRunner import *
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+def testEngine():
 
+    runner = MatchRunner(depth=2)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+    matchData = runner.runMatches(NewZealandVariant(), 100, debug=False)
 
+    for match in matchData.matches:
+        print(match)
+
+    matchData.dumpPGN("test")
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    testEngine()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/

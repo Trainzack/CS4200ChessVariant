@@ -37,7 +37,10 @@ class Match:
         output = "[Event \"Computer Match, Variant: {0}\"]\n".format(self.variant.getVariantName())
         output += "[Site \"{0}\"]\n".format(self.site)
         output += "[Date \"{0}\"]\n".format(self.match_date)
-        output += "[Variant  \"{0}\"]\n".format(self.variant.getVariantName())
+        output += "[WhiteType \"program\"]\n[BlackType \"program\"]\n"
+        output += "[PlyCount \"{0}\"]\n".format(len(self.moves))
+        output += "[Result \"{0}\"]\n".format(self.result)
+        output += "[Variant \"{0}\"]\n".format(self.variant.getVariantName())
 
         # We need to get the list of variant pieces for winboard or other viewers to understand.
         variantMenString = ""
@@ -45,11 +48,9 @@ class Match:
             variantMenString += "{0}:{1};".format(p,b)
         variantMenString = variantMenString[0:-1] # Strip the last semicolon
 
-        output += "[VarientMen  \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
-        output += "[VariantFEN \"{0}\"]\n".format(self.variant.getStartingFEN())
-        output += "[WhiteType \"program\"]\n[BlackType \"program\"]\n"
-        output += "[PlyCount \"{0}\"]\n".format(len(self.moves))
-        output += "[Result \"{0}\"]\n".format(self.result)
+        output += "[VarientMen \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
+        output += "[FEN \"{0}\"]\n".format(self.variant.getStartingFEN())
+        output += "[SetUp \"1\"]"
 
         # Finally, we need to get the list of moves.
 

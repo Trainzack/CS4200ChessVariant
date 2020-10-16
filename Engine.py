@@ -85,6 +85,7 @@ class Engine(subprocess.Popen):
         self.isready()
 
     def put(self, command):
+        # print(command)
         self.stdin.write(command + '\n')
         self.stdin.flush()
 
@@ -97,21 +98,28 @@ class Engine(subprocess.Popen):
         if stdout.find('No such') >= 0:
             print("stockfish was unable to set option %s" % optionname)
 
-    def setVariant(self, variant:Variant):
+    def setVariant(self, variant:Variant, writeIni=True):
         """
         Changes the variant that this engine is playing.
         :param variant: The variant that we want to set this engine to
+        :param writeIni: Whether we should write the result of variant's getFairyStockfishINI() call to a file and have fairyStockfish read it.
         :return:none
         """
         self.variant = variant
 
+        if writeIni:
+            variantPath:str = "variant-{0}.ini".format(variant.getVariantName())
+            with open(variantPath, "w") as ini:
+                ini.write(variant.getFairyStockfishINI())
+            self.setoption("VariantPath", variantPath)
         self.setoption("UCI_Variant", variant.getVariantName())
 
     def setposition(self, moves=()):
         """
         Move list is a list of moves (i.e. ['e2e4', 'e7e5', ...]) each entry as a string.  Moves must be in full algebraic notation.
         """
-        self.put('position startpos moves %s' % self._movelisttostr(moves))
+        self.put('position fen {0} moves {1}'.format(self.variant.getStartingFEN(), self._movelisttostr(moves)))
+        # self.put('position startpos moves %s' % self._movelisttostr(moves))
         self.isready()
 
     def setfenposition(self, fen):
@@ -165,7 +173,14 @@ class Engine(subprocess.Popen):
         Used to synchronize the python engine object with the back-end engine.  Sends 'isready' and waits for 'readyok.'
         """
         self.put('isready')
-        while True:
+        retryCount: int = 20
+        while retryCount > 0:
             text = self.stdout.readline().strip()
+            # print("Waiting: {0}".format(text))
             if text == 'readyok':
                 return text
+            elif text == '':
+                retryCount -= 1
+            else:
+                retryCount = 20
+        raise ConnectionAbortedError("Engine did not return isready!")

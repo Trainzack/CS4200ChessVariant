@@ -46,7 +46,7 @@ class Match:
         variantMenString = variantMenString[0:-1] # Strip the last semicolon
 
         output += "[VarientMen  \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
-        output += "[FEN \"{0}\"]\n".format(self.variant.getStartingFEN())
+        output += "[VariantFEN \"{0}\"]\n".format(self.variant.getStartingFEN())
         output += "[WhiteType \"program\"]\n[BlackType \"program\"]\n"
         output += "[PlyCount \"{0}\"]\n".format(len(self.moves))
         output += "[Result \"{0}\"]\n".format(self.result)
@@ -88,12 +88,15 @@ class MatchRunner:
 
     def __init__(self):
 
-        self.whiteEngine = Engine()
-        self.blackEngine = Engine(depth=10)
+
+        self.whiteEngine: Engine = Engine(depth=6)
+        self.blackEngine: Engine = Engine(depth=6)
         self.engines = (self.whiteEngine, self.blackEngine)
 
 
-    def runMatches(self, variant:Variant, matchCount = 100) -> MatchData:
+    def runMatches(self, variant:Variant, matchCount = 100, debug=False) -> MatchData:
+
+
 
         matchData = MatchData()
 
@@ -112,16 +115,14 @@ class MatchRunner:
 
             # This is the loop that goes through the moves in any individual game
             while True:
+                print(len(match.moves))
                 # Don't let too many moves happen!
                 if len(match.moves) > 200:
                     match.markDraw()
                     break
-                elif len(match.moves) % 2:
-                    active_engine = self.blackEngine
-                    inactive_engine = self.whiteEngine
-                else:
-                    inactive_engine = self.whiteEngine
-                    active_engine = self.blackEngine
+
+                active_engine = self.engines[len(match.moves)%2]
+                inactive_engine = self.engines[(len(match.moves)+1)%2]
 
                 active_engine.setposition(match.moves)
                 moveDict = active_engine.bestmove()
@@ -130,20 +131,24 @@ class MatchRunner:
                 info: str = moveDict["info"]
                 match.moves.append(bestMove)
 
+                if debug:
+                    print("{0}, move {1}, info {2}".format(len(match.moves), bestMove, info))
+
                 # If the engine found mate, then we can stop running through the steps.
                 if 'mate' in moveDict.keys():
                     mateNum:int = moveDict['mate']
-                    # Somebody has mate, so find out who is the winner
-                    if mateNum > 0:
-                        winning = active_engine
-                    else:
-                        winning = inactive_engine
+                    if mateNum in (1, 0):
+                        # Somebody has checkmate, so find out who is the winner
+                        if mateNum > 0:
+                            winning = active_engine
+                        else:
+                            winning = inactive_engine
 
-                    if winning == self.whiteEngine:
-                        match.markWhiteVictory()
-                    else:
-                        match.markBlackVictory()
-                    break
-            # Add the matches we just played to the match data.
+                        if winning == self.whiteEngine:
+                            match.markWhiteVictory()
+                        else:
+                            match.markBlackVictory()
+                        break
+                # Add the matches we just played to the match data.
             matchData.matches.append(match)
         return matchData

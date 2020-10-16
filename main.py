@@ -6,7 +6,7 @@ def testEngine():
 
     runner = MatchRunner()
 
-    matchData = runner.runMatches(ChessVariant(), 2)
+    matchData = runner.runMatches(ArchBishopVariant(), 2, debug=True)
 
     for match in matchData.matches:
         print(match)

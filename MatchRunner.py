@@ -89,22 +89,33 @@ class MatchRunner:
     This class runs matches between engines, and records the data in a MatchData class
     """
 
-    def __init__(self):
+    def __init__(self, depth=2):
+        """
 
+        :param depth: The depth of the engine
+        """
 
-        self.whiteEngine: Engine = Engine(depth=16)
-        self.blackEngine: Engine = Engine(depth=16)
+        self.whiteEngine: Engine = Engine(depth=depth)
+        self.blackEngine: Engine = Engine(depth=depth)
         self.engines = (self.whiteEngine, self.blackEngine)
 
-    def runMatches(self, variant:Variant, matchCount = 100, debug=False) -> MatchData:
+    def runMatches(self, variant:Variant, matchCount=100, debug=False, variantPath:str="") -> MatchData:
+        """
 
+        :param variant: The variant we want to run matches of.
+        :param matchCount: The number of matches to run
+        :param debug: If true, print debug statements
+        :param variantPath: A path to the .ini file that contains the variant. If none is provided, one will be created.
+        :return:
+        """
 
 
         matchData = MatchData()
 
-        variantPath: str = "variant-{0}.ini".format(variant.getVariantName())
-        with open(variantPath, "w") as ini:
-            ini.write(variant.getFairyStockfishINI())
+        if variantPath == "":
+            variantPath = "variant-{0}.ini".format(variant.getVariantName())
+            with open(variantPath, "w") as ini:
+                ini.write(variant.getFairyStockfishINI())
 
         pyffish.set_option("VariantPath", variantPath)
 
@@ -121,10 +132,11 @@ class MatchRunner:
                 e.newgame()
 
             # Go through a MCTS opening
-            for i in range(10):
+            for i in range(2):
                 legal_moves = pyffish.legal_moves(variant.getVariantName(), variant.getStartingFEN(), match.moves)
                 if len(legal_moves) == 0:
                     # Checkmate!
+                    # TODO: this needs to be replaced with calls to pyffish
                     if i % 2 == 0:
                         match.markBlackVictory()
                     else:
@@ -139,7 +151,7 @@ class MatchRunner:
             # This is the loop that goes through the moves in any individual game
             while True:
                 # Don't let too many moves happen!
-                if len(match.moves) > 200:
+                if len(match.moves) >= 200:
                     match.markDraw()
                     break
 
@@ -157,6 +169,7 @@ class MatchRunner:
                     print("{0}, move {1}, info {2}".format(len(match.moves), bestMove, info))
 
                 # If the engine found mate, then we can stop running through the steps.
+                # TODO: This needs to be replaced with calls to pyffish.
                 if 'mate' in moveDict.keys():
                     mateNum:int = moveDict['mate']
                     if mateNum in (1, 0):

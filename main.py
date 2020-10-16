@@ -4,9 +4,9 @@ from MatchRunner import *
 
 def testEngine():
 
-    runner = MatchRunner()
+    runner = MatchRunner(depth=2)
 
-    matchData = runner.runMatches(ArchBishopVariant(), 100, debug=False)
+    matchData = runner.runMatches(NewZealandVariant(), 100, debug=False)
 
     for match in matchData.matches:
         print(match)

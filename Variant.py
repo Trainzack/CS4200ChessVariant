@@ -6,8 +6,6 @@
 class Variant:
     """Represents a variant of the game chess."""
 
-
-
     def getStartingFEN(self) -> str:
         """Returns the starting FEN"""
         # TODO

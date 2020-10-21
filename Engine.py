@@ -3,7 +3,8 @@
 # It is set to use fairy stockfish to start with.
 
 import subprocess
-from Variant import Variant, ChessVariant
+from Variant import Variant, StaticVariants
+
 
 class Engine(subprocess.Popen):
     """
@@ -50,7 +51,7 @@ class Engine(subprocess.Popen):
         # ("fairy-stockfish_x86-64.exe", "load", "variants.ini")
         self.depth = str(depth)
         self.put('uci')
-        self.variant: Variant = ChessVariant()
+        self.variant: Variant = StaticVariants.CHESS
 
         base_param = {
             "Write Debug Log": "false",
@@ -102,14 +103,13 @@ class Engine(subprocess.Popen):
         """
         Changes the variant that this engine is playing.
         :param variant: The variant that we want to set this engine to
-        :param writeIni: Whether we should write the result of variant's getFairyStockfishINI() call to a file and have fairyStockfish read it.
         :return:none
         """
         self.variant = variant
 
         if variantPath is not None:
             self.setoption("VariantPath", variantPath)
-        self.setoption("UCI_Variant", variant.getVariantName())
+        self.setoption("UCI_Variant", variant.name)
 
     def setposition(self, moves=()):
         """

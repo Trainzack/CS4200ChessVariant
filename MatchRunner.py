@@ -1,5 +1,6 @@
 #  Loosely based off of pystockfish
 
+from Piece import Piece
 from Engine import Engine
 from Variant import Variant
 import socket
@@ -7,15 +8,17 @@ from datetime import date
 import pyffish
 import random
 
+
 class Match:
     """
     This class represents one single match.
     """
-    def __init__(self, variant:Variant):
+    def __init__(self, variant:Variant, round:int):
         self.moves = []
         self.site = socket.gethostname()
         self.match_date=date.today()
         self.variant = variant
+        self.round = round
         # Valid values for result:
         #    "1-0" (White wins)
         #    "0-1" (Black wins)
@@ -24,7 +27,7 @@ class Match:
         self.result = "*"
 
     def __str__(self):
-        return "{0} Match. {1} turns, result: {2}".format(self.variant.getVariantName(), len(self.moves), self.result)
+        return "{0} Match. {1} turns, result: {2}".format(self.variant.name, len(self.moves), self.result)
 
     def markWhiteVictory(self):
         self.result = "1-0"
@@ -36,23 +39,27 @@ class Match:
         self.result = "1/2-1/2"
 
     def getPGN(self) -> str:
-        output = "[Event \"Computer Match, Variant: {0}\"]\n".format(self.variant.getVariantName())
+        output = "[Event \"Computer Match, Variant: {0}\"]\n".format(self.variant.name)
         output += "[Site \"{0}\"]\n".format(self.site)
         output += "[Date \"{0}\"]\n".format(self.match_date)
+        output += "[Round \"{0}\"]\n".format(self.round)
         output += "[WhiteType \"program\"]\n[BlackType \"program\"]\n"
         output += "[PlyCount \"{0}\"]\n".format(len(self.moves))
         output += "[Result \"{0}\"]\n".format(self.result)
-        output += "[Variant \"{0}\"]\n".format(self.variant.getVariantName())
+        output += "[Variant \"{0}\"]\n".format(self.variant.name)
+
+        # I think the following tags are non-standard!
 
         # We need to get the list of variant pieces for winboard or other viewers to understand.
-        variantMenString = ""
-        for p, b in self.variant.getVariantMen().items():
-            variantMenString += "{0}:{1};".format(p,b)
-        variantMenString = variantMenString[0:-1] # Strip the last semicolon
+        # variantMenString = ""
+        # for char, piece in self.variant.getVariantMen().items():
+        #     variantMenString += "{0}:{1};".format(char, piece.betza)
+        # variantMenString = variantMenString[0:-1] # Strip the last semicolon
 
-        output += "[VarientMen \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
+        # output += "[VarientMen \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
+        # output += "[pieceToCharTable \"{0}\"]\n".format(self.variant.getPieceToCharTable())
         output += "[FEN \"{0}\"]\n".format(self.variant.getStartingFEN())
-        output += "[SetUp \"1\"]"
+        # output += "[SetUp \"1\"]"
 
         # Finally, we need to get the list of moves.
 
@@ -99,7 +106,7 @@ class MatchRunner:
         self.blackEngine: Engine = Engine(depth=depth)
         self.engines = (self.whiteEngine, self.blackEngine)
 
-    def runMatches(self, variant:Variant, matchCount=100, debug=False, variantPath:str="") -> MatchData:
+    def runMatches(self, variant: Variant, matchCount=100, debug=False, variantPath: str="") -> MatchData:
         """
 
         :param variant: The variant we want to run matches of.
@@ -109,11 +116,10 @@ class MatchRunner:
         :return:
         """
 
-
         matchData = MatchData()
 
         if variantPath == "":
-            variantPath = "variant-{0}.ini".format(variant.getVariantName())
+            variantPath = "variant-{0}.ini".format(variant.name)
             with open(variantPath, "w") as ini:
                 ini.write(variant.getFairyStockfishINI())
 
@@ -126,14 +132,14 @@ class MatchRunner:
         for matchNo in range(matchCount):
 
 
-            match = Match(variant)
+            match = Match(variant, (matchNo + 1))
 
             for e in self.engines:
                 e.newgame()
 
             # Go through a MCTS opening
             for i in range(2):
-                legal_moves = pyffish.legal_moves(variant.getVariantName(), variant.getStartingFEN(), match.moves)
+                legal_moves = pyffish.legal_moves(variant.name, variant.getStartingFEN(), match.moves)
                 if len(legal_moves) == 0:
                     # Checkmate!
                     # TODO: this needs to be replaced with calls to pyffish

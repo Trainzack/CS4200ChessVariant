@@ -4,12 +4,9 @@ from MatchRunner import *
 
 def testEngine():
 
-    runner = MatchRunner(depth=2)
+    runner = MatchRunner(depth=3)
 
-    matchData = runner.runMatches(NewZealandVariant(), 100, debug=False)
-
-    for match in matchData.matches:
-        print(match)
+    matchData = runner.runMatches(StaticVariants.STONK_VARIANT, 1, debug=False)
 
     matchData.dumpPGN("test")
 

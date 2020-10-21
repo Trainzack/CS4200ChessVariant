@@ -1,13 +1,13 @@
 # This class represents a chess variant.
 # This is what the genetic algroithm will develop
-from typing import Dict
+import Piece
+from typing import Dict, List
 
-from Piece import *
 
 class Variant:
     """Represents a variant of the game chess."""
 
-    def __init__(self, name: str, startingFEN: str, pieces: List[Piece], iniFlags: List[str]=None):
+    def __init__(self, name: str, startingFEN: str, pieces: List[Piece.Piece], iniFlags: List[str]=None):
         """
 
         :param name: The name of this variant
@@ -39,7 +39,7 @@ class Variant:
         """
         return self.startingFEN
 
-    def getVariantMen(self) -> Dict[str, Piece]:
+    def getVariantMen(self) -> Dict[str, Piece.Piece]:
         """Returns a dict of the following format:
 
             Key: A str containing the letter of the piece
@@ -84,48 +84,13 @@ class Variant:
 
 
 
-class NewZealandVariant(Variant):
-    """Chess, but the knights capture like rooks and the rooks caputre like knights.
-    This is a variant built in to fairy-stockfish, and it uses standard chess piece letters."""
-
-    def getStartingFEN(self) -> str:
-        """Returns the starting FEN"""
-        # TODO
-        return "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1"
-
-    def getFairyStockfishINI(self) -> str:
-        # This one is built in.
-        return ""
-
-    def getVariantName(self) -> str:
-        """Returns the name of this variant, as in its variant.ini file"""
-        return "newzealand"
-
-    def getVariantMen(self) -> dict:
-        """Returns a dict of the following format:
-
-            Key: A str containing the letter of the piece
-            Value: A str containing the betza notation of the piece
-
-        For each piece.
-        """
-        return {
-            "P": "fmWfceF",
-            "B": "B",
-            "N": "mNcR",
-            "R": "mRcN",
-            "Q": "Q",
-            "K": "K",
-        }
-
-
 class StaticVariants:
 
     CHESS = Variant("chess",
                     "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1",
-                    [Pieces.PAWN, Pieces.BISHOP, Pieces.KNIGHT, Pieces.ROOK, Pieces.QUEEN, Pieces.KING])
+                    [Piece.PAWN, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK, Piece.QUEEN, Piece.KING])
 
     STONK_VARIANT = Variant("stonkchess",
-                            "rnbqkbnr/aaaaaaaa/1a4a1/8/8/1A4A1/AAAAAAAA/RNBQKBNR w KQkq - 0 1",
-                            [Pieces.ALFIL, Pieces.BISHOP, Pieces.KNIGHT, Pieces.ROOK, Pieces.QUEEN, Pieces.KING])
+                            "rcbzkbcr/aaaaaaaa/1f4f1/8/8/1F4F1/AAAAAAAA/RCBZKBCR w KQkq - 0 1",
+                            [Piece.ALFIL, Piece.FERZ, Piece.BISHOP, Piece.CHANCELLOR, Piece.ROOK, Piece.AMAZON, Piece.KING])
 

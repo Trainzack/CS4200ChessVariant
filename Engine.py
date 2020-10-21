@@ -3,7 +3,7 @@
 # It is set to use fairy stockfish to start with.
 
 import subprocess
-from Variant import Variant, StaticVariants
+import Variant
 
 
 class Engine(subprocess.Popen):
@@ -51,7 +51,7 @@ class Engine(subprocess.Popen):
         # ("fairy-stockfish_x86-64.exe", "load", "variants.ini")
         self.depth = str(depth)
         self.put('uci')
-        self.variant: Variant = StaticVariants.CHESS
+        self.variant: Variant = Variant.StaticVariants.CHESS
 
         base_param = {
             "Write Debug Log": "false",

@@ -7,8 +7,11 @@ import LatexExport
 
 def testEngine():
 
-    for piece in Piece.Piece.pieces:
-        print(LatexExport.getPieceDefinition(piece, piece.preferredChar))
+    #for piece in Piece.Piece.pieces:
+    #    print(LatexExport.getPieceDefinition(piece, piece.preferredChar))
+
+    print(Variant.StaticVariants.CHESS.getStartingFEN())
+
 
     runner = MatchRunner.MatchRunner(depth=3)
 

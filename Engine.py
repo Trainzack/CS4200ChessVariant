@@ -115,7 +115,7 @@ class Engine(subprocess.Popen):
         """
         Move list is a list of moves (i.e. ['e2e4', 'e7e5', ...]) each entry as a string.  Moves must be in full algebraic notation.
         """
-        self.put('position fen {0} moves {1}'.format(self.variant.getStartingFEN(), self._movelisttostr(moves)))
+        self.put('position fen {0} moves {1}'.format(self.variant.startingFEN, self._movelisttostr(moves)))
         # self.put('position startpos moves %s' % self._movelisttostr(moves))
         self.isready()
 

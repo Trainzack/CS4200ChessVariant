@@ -34,7 +34,7 @@ def pieceTupleToFENString(pieceTuple: Tuple[Tuple[Optional[Piece.Piece], Optiona
                 else:
                     nextChar = nextChar.lower()
                 out += nextChar
-                
+
         if emptyCount > 0:
             out += str(emptyCount)
         out += "/"
@@ -88,13 +88,6 @@ class Variant:
         for flag in self.iniFlags:
             out += "{0}\n".format(flag)
         return out
-
-    def getStartingFEN(self) -> str:
-        """
-        I'm leaving this in in case we want to construct the starting FEN from tuples or something at a later date.
-        :return: The starting FEN position for this variant
-        """
-        return self.startingFEN
 
     def getVariantMen(self) -> Dict[str, Piece.Piece]:
         """Returns a dict of the following format:

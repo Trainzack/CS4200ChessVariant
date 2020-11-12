@@ -2,67 +2,11 @@
 
 from Engine import Engine
 from Variant import Variant
-import socket
-from datetime import date
+from Match import Match
+
 import pyffish
 import random
 
-class Match:
-    """
-    This class represents one single match.
-    """
-    def __init__(self, variant:Variant):
-        self.moves = []
-        self.site = socket.gethostname()
-        self.match_date=date.today()
-        self.variant = variant
-        # Valid values for result:
-        #    "1-0" (White wins)
-        #    "0-1" (Black wins)
-        #    "1/2-1/2" (Drawn game)
-        #    "*" (game still in progress, game abandoned, or result otherwise unknown)
-        self.result = "*"
-
-    def __str__(self):
-        return "{0} Match. {1} turns, result: {2}".format(self.variant.getVariantName(), len(self.moves), self.result)
-
-    def markWhiteVictory(self):
-        self.result = "1-0"
-
-    def markBlackVictory(self):
-        self.result = "0-1"
-
-    def markDraw(self):
-        self.result = "1/2-1/2"
-
-    def getPGN(self) -> str:
-        output = "[Event \"Computer Match, Variant: {0}\"]\n".format(self.variant.getVariantName())
-        output += "[Site \"{0}\"]\n".format(self.site)
-        output += "[Date \"{0}\"]\n".format(self.match_date)
-        output += "[WhiteType \"program\"]\n[BlackType \"program\"]\n"
-        output += "[PlyCount \"{0}\"]\n".format(len(self.moves))
-        output += "[Result \"{0}\"]\n".format(self.result)
-        output += "[Variant \"{0}\"]\n".format(self.variant.getVariantName())
-
-        # We need to get the list of variant pieces for winboard or other viewers to understand.
-        variantMenString = ""
-        for p, b in self.variant.getVariantMen().items():
-            variantMenString += "{0}:{1};".format(p,b)
-        variantMenString = variantMenString[0:-1] # Strip the last semicolon
-
-        output += "[VarientMen \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
-        output += "[FEN \"{0}\"]\n".format(self.variant.getStartingFEN())
-        output += "[SetUp \"1\"]"
-
-        # Finally, we need to get the list of moves.
-
-        output += "\n"
-        for i, move in enumerate(self.moves):
-            if i % 2 == 0:
-                output += "{0}. ".format((i // 2) + 1)
-            output += "{0} ".format(move)
-        output += self.result
-        return output
 
 class MatchData:
     """
@@ -99,7 +43,7 @@ class MatchRunner:
         self.blackEngine: Engine = Engine(depth=depth)
         self.engines = (self.whiteEngine, self.blackEngine)
 
-    def runMatches(self, variant:Variant, matchCount=100, debug=False, variantPath:str="") -> MatchData:
+    def runMatches(self, variant: Variant, matchCount=100, debug=False, variantPath: str="") -> MatchData:
         """
 
         :param variant: The variant we want to run matches of.
@@ -109,11 +53,10 @@ class MatchRunner:
         :return:
         """
 
-
         matchData = MatchData()
 
         if variantPath == "":
-            variantPath = "variant-{0}.ini".format(variant.getVariantName())
+            variantPath = "variant-{0}.ini".format(variant.name)
             with open(variantPath, "w") as ini:
                 ini.write(variant.getFairyStockfishINI())
 
@@ -126,14 +69,14 @@ class MatchRunner:
         for matchNo in range(matchCount):
 
 
-            match = Match(variant)
+            match = Match(variant, (matchNo + 1))
 
             for e in self.engines:
                 e.newgame()
 
             # Go through a MCTS opening
             for i in range(2):
-                legal_moves = pyffish.legal_moves(variant.getVariantName(), variant.getStartingFEN(), match.moves)
+                legal_moves = pyffish.legal_moves(variant.name, variant.getStartingFEN(), match.moves)
                 if len(legal_moves) == 0:
                     # Checkmate!
                     # TODO: this needs to be replaced with calls to pyffish
@@ -145,7 +88,7 @@ class MatchRunner:
 
                 move = legal_moves[random.randint(0,len(legal_moves)-1)]
                 # TODO: Apply MCTS algorithm
-                match.moves.append(move)
+                match.addMove(move)
 
 
             # This is the loop that goes through the moves in any individual game
@@ -163,7 +106,7 @@ class MatchRunner:
                 bestMove: str = moveDict["move"]
                 ponder: str = moveDict["ponder"]
                 info: str = moveDict["info"]
-                match.moves.append(bestMove)
+                match.addMove(bestMove)
 
                 if debug:
                     print("{0}, move {1}, info {2}".format(len(match.moves), bestMove, info))

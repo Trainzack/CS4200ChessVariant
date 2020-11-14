@@ -89,7 +89,7 @@ def convertToList(pieceTuple: Tuple[Tuple[Optional[Piece.Piece], Optional[Piece.
 
 def convertToTuple(pieceList: List[List]) -> Tuple[Tuple]:
     boardTuple: Tuple[Tuple]
-    boardTuple = tuple(pieceList)
+    boardTuple = tuple(tuple(l) for l in pieceList)
     return boardTuple
 
 # A = [6,7,8,3]

@@ -87,7 +87,7 @@ def convertToList(pieceTuple: Tuple[Tuple[Optional[Piece.Piece], Optional[Piece.
         boardList.append(rowList)
     return boardList
 
-def convertToTuple(pieceList: List[List]) -> Tuple[Tuple]:
+def convertToTuple(pieceList) -> Tuple[Tuple]:
     boardTuple: Tuple[Tuple]
     boardTuple = tuple(tuple(l) for l in pieceList)
     return boardTuple

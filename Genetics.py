@@ -65,12 +65,80 @@ def mutatePieces(children, changeCount, pieces) -> list:
     #repeat for changeCount
     pass
 
-def shufflePieces(children, shuffleCount) -> list:
+def shufflePieces(child, shuffleCount, king) -> list:
     #flip(fileRange)
     #exchange((file,rank),(file,rank))
     #random(randomCount)
     #Ensure King remains in back rank
-    pass
+
+    childList = convertToList(child)
+    random.randint(0, 1)
+    remainingShuffles = shuffleCount
+    logBlack = ""
+    logWhite = ""
+    while remainingShuffles > 0:
+
+        #do a random shuffle for the bottom side(row 0 and 1)
+        while True:
+            randRow1 = random.randint(0, 1)
+            randCol1 = random.randint(0, 7)
+            piece1 = childList[randRow1][randCol1]
+
+            randRow2 = random.randint(0, 1)
+            randCol2 = random.randint(0, 7)
+            piece2 = childList[randRow2][randCol2]
+
+            if piece1 == piece2:
+                #swapping the same piece won't change anything
+                #try again and pick two different pieces
+                continue
+
+            if piece1 == king or piece2 == king:
+                if (randRow1 == 0 or randRow2 == 0):
+                    #dont swap because the king will be in front
+                    #try again and pick two different pieces
+                    continue
+
+            #when no problems with king swap then break
+            childList[randRow1][randCol1] = piece2
+            childList[randRow2][randCol2] = piece1
+
+            logBlack = logBlack + "black side swapped " + piece2.name + " with " + piece1.name + "\n"
+            break
+
+        #do a random shuffle for the bottom side(row 6 and 7)
+        while True:
+            randRow1 = random.randint(0, 1) + 6
+            randCol1 = random.randint(0, 7)
+            piece1 = childList[randRow1][randCol1]
+
+            randRow2 = random.randint(0, 1) + 6
+            randCol2 = random.randint(0, 7)
+            piece2 = childList[randRow2][randCol2]
+            if piece1 == piece2:
+                #swapping the same piece won't change anything
+                #try again and pick two different pieces
+                continue
+            if piece1 == king or piece2 == king:
+                if (randRow1 == 6 or randRow2 == 6):
+                    # dont swap because the king will be in front
+                    #try again and pick two different pieces
+                    continue
+
+            # when no problems with king swap then break
+            childList[randRow1][randCol1] = piece2
+            childList[randRow2][randCol2] = piece1
+
+            logWhite = logWhite + "white side swapped " + piece2.name + " with " + piece1.name + "\n"
+            break
+
+        remainingShuffles = remainingShuffles - 1
+
+    print(logBlack)
+    print(logWhite)
+    childTuple = convertToTuple(childList)
+    return childTuple
+
 def findKing(board: List[List], king) -> tuple:
     for i in range(len(board)):
         for j in range(len(board[0])):
@@ -92,15 +160,30 @@ def convertToTuple(pieceList) -> Tuple[Tuple]:
     boardTuple = tuple(tuple(l) for l in pieceList)
     return boardTuple
 
+def printTest(pieceTuple): #formats and prints the test board
+    for row in pieceTuple:
+        for piece in row:
+             if piece == None:
+                 print("none", end=" "),
+             else:
+                print(piece.name, end=" "),
+        print("")
+
 # A = [6,7,8,3]
 # print(max(A))
 # print(A[0:2], A[2:])
 
-parents = [[[1,2,3,"k"],[5,6,7,8]], [["k",10,11,12],[13,14,15,16]]]
-print(parents)
-children = combineBoards(parents,2, "halfAndHalf", "k")
-print(findKing(parents[0], "k"))
+# parents = [[[1,2,3,"k"],[5,6,7,8]], [["k",10,11,12],[13,14,15,16]]]
 
-print(children)
-print(parents)
-print(random.randint(0,1))
+# children = combineBoards(parents,2, "halfAndHalf", "k")
+# print(findKing(parents[0], "k"))
+#
+# print(children)
+# print(parents)
+# print(random.randint(0,1))
+
+#standard board for testing
+shuffleTest = (Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK)
+# printTest(shuffleTest)
+# print("")
+printTest(shufflePieces(shuffleTest, 50, Piece.KING))

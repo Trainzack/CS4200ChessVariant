@@ -85,14 +85,12 @@ def mutatePieces(children, changeCount, pieces, king) -> list:
     return children
     pass
 
-def shufflePieces(children, shuffleCount) -> list:
+def shufflePieces(child, shuffleCount, king) -> list:
     #flip(fileRange)
     #exchange((file,rank),(file,rank))
     #random(randomCount)
     #Ensure King remains in back rank
-<<<<<<< Updated upstream
-    pass
-=======
+
 
     childList = convertToList(child)
     random.randint(0, 1)
@@ -174,7 +172,7 @@ def getRandomPiece(pieces, excludedPieces):
     return piece
 
 
->>>>>>> Stashed changes
+
 def findKing(board: List[List], king) -> tuple:
     for i in range(len(board)):
         for j in range(len(board[0])):
@@ -196,8 +194,7 @@ def convertToTuple(pieceList: List[List]) -> Tuple[Tuple]:
     boardTuple = tuple(pieceList)
     return boardTuple
 
-<<<<<<< Updated upstream
-=======
+
 def printTest(pieceTuple): #formats and prints the test board
     for row in pieceTuple:
         for piece in row:
@@ -221,27 +218,27 @@ def getRandomBoard(size, pieces, whiteRanks, blackRanks, king):
     for rows in range(blackRanks[0], blackRanks[1] + 1):
         for cols in range(size[1]):
             board[rows][cols] = getRandomPiece(pieces, [king])
-    whiteKingLoc = getRandomLoc(0,0,0,size[1])
-    blackKingLoc = getRandomLoc(blackRanks[1],blackRanks[1],0,size[1])
+    whiteKingLoc = getRandomLoc(0,0,0,size[1]-1)
+    blackKingLoc = getRandomLoc(blackRanks[1],blackRanks[1],0,size[1]-1)
     print(blackKingLoc)
     board[whiteKingLoc[0]][whiteKingLoc[1]] = king
     board[blackKingLoc[0]][blackKingLoc[1]] = king
     return board
->>>>>>> Stashed changes
+
 # A = [6,7,8,3]
 # print(max(A))
 # print(A[0:2], A[2:])
 
-parents = [[[1,2,3,"k"],[5,6,7,8]], [["k",10,11,12],[13,14,15,16]]]
-print(parents)
-children = combineBoards(parents,2, "halfAndHalf", "k")
-print(findKing(parents[0], "k"))
+# parents = [[[1,2,3,"k"],[5,6,7,8]], [["k",10,11,12],[13,14,15,16]]]
+# print(parents)
+# children = combineBoards(parents,2, "halfAndHalf", "k")
+# print(findKing(parents[0], "k"))
+#
+#
+# print(children)
+# print(parents)
+# print(random.randint(0,1))
 
-<<<<<<< Updated upstream
-print(children)
-print(parents)
-print(random.randint(0,1))
-=======
 #standard board for testing
 shuffleTest = (Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK)
 printTest(shuffleTest)
@@ -255,4 +252,4 @@ printTest(mutateTest[0])
 
 randBoard = getRandomBoard((8,8),Piece.Piece.pieces,(0,1),(6,7), Piece.KING)
 printTest(convertToTuple(randBoard))
->>>>>>> Stashed changes
+

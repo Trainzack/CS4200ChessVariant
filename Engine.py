@@ -107,7 +107,7 @@ class Engine(subprocess.Popen):
         """
         self.variant = variant
 
-        if variantPath is not None:
+        if variantPath is not None and not variant.builtIn:
             self.setoption("VariantPath", variantPath)
         self.setoption("UCI_Variant", variant.name)
 
@@ -115,7 +115,7 @@ class Engine(subprocess.Popen):
         """
         Move list is a list of moves (i.e. ['e2e4', 'e7e5', ...]) each entry as a string.  Moves must be in full algebraic notation.
         """
-        self.put('position fen {0} moves {1}'.format(self.variant.getStartingFEN(), self._movelisttostr(moves)))
+        self.put('position fen {0} moves {1}'.format(self.variant.startingFEN, self._movelisttostr(moves)))
         # self.put('position startpos moves %s' % self._movelisttostr(moves))
         self.isready()
 
@@ -159,9 +159,12 @@ class Engine(subprocess.Popen):
                         'info': last_line}
                 mateloc = last_line.find('mate')
                 if mateloc >= 0:
-                    nodesloc = last_line.find('nodes') # Note: this assumes that mate will always be followed by nodes, a bold assumption
-                    matenum = int(last_line[mateloc + 5:nodesloc])
+                    # print(last_line)
+                    endofcountloc = last_line.find(" ", mateloc + 5)
+
+                    matenum = int(last_line[mateloc + 5:endofcountloc] if endofcountloc >= 0 else last_line[mateloc + 5])
                     moveInfo['mate'] = matenum
+
                 return moveInfo
             last_line = text
 

@@ -34,7 +34,7 @@ def pieceTupleToFENString(pieceTuple: Tuple[Tuple[Optional[Piece.Piece], Optiona
                 else:
                     nextChar = nextChar.lower()
                 out += nextChar
-                
+
         if emptyCount > 0:
             out += str(emptyCount)
         out += "/"
@@ -46,13 +46,14 @@ class Variant:
     """Represents a variant of the game chess."""
 
     def __init__(self, name: str, startingPosition: Tuple[Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]], Tuple[Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece], Optional[Piece.Piece]]],
-                 pieces: List[Piece.Piece], iniFlags: List[str]=None):
+                 pieces: List[Piece.Piece], iniFlags: List[str]=None, builtIn=False):
         """
 
         :param name: The name of this variant
         :param startingPosition: a 2D tuple of the starting position.
         :param pieces: A list of Pieces that this variant uses
         :param iniFlags: A list of strings that will be put in the INI file for this variant.
+        :param builtIn: True if this is a variant that fairyStockfish already knows, false otherwise. If true, then we won't put this variant in any INI file.
         """
 
         self.name = name
@@ -60,6 +61,7 @@ class Variant:
 
         self.pieces = pieces
         self.variantMen = dict() # Letter: piece
+        self.builtIn = builtIn
 
         # Fill the variantMen dicitonary
         availableChars = "abcdefghijklmnopqrstuvqxyz" # keep track of what letters we've got left.
@@ -88,13 +90,6 @@ class Variant:
         for flag in self.iniFlags:
             out += "{0}\n".format(flag)
         return out
-
-    def getStartingFEN(self) -> str:
-        """
-        I'm leaving this in in case we want to construct the starting FEN from tuples or something at a later date.
-        :return: The starting FEN position for this variant
-        """
-        return self.startingFEN
 
     def getVariantMen(self) -> Dict[str, Piece.Piece]:
         """Returns a dict of the following format:
@@ -134,6 +129,12 @@ class Variant:
 
         return "".join(charTable)
 
+class BuiltInVariant(Variant):
+
+    def __init__(self, name: str, startingFEN: str):
+        super().__init__(name, (), [], builtIn=True)
+
+        self.startingFEN = startingFEN
 
 
 class StaticVariants:
@@ -149,7 +150,21 @@ class StaticVariants:
                         (Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),
                         (Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK),
                     ),
-                    [Piece.PAWN, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK, Piece.QUEEN, Piece.KING])
+                    [Piece.PAWN, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK, Piece.QUEEN, Piece.KING], builtIn=True)
+
+    NOCASTLE = BuiltInVariant("nocastle", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1")
+    AMAZON = BuiltInVariant("amazon", "rnbakbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBAKBNR w KQkq - 0 1")
+    HOPPELPOPPEL = BuiltInVariant("hoppelpoppel", CHESS.startingFEN)
+    NEWZEALAND = BuiltInVariant("newzealand", CHESS.startingFEN)
+    KNIGHTMATE = BuiltInVariant("knightmate", "rmbqkbmr/pppppppp/8/8/8/8/PPPPPPPP/RMBQKBMR w KQkq - 0 1")
+    ANTICHESS = BuiltInVariant("antichess", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w - - 0 1")
+    HORDE = BuiltInVariant("horde", "rnbqkbnr/pppppppp/8/1PP2PP1/PPPPPPPP/PPPPPPPP/PPPPPPPP/PPPPPPPP w kq - 0 1")
+    THREECHECK = BuiltInVariant("3check", "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 3+3 0 1")
+    LOSALAMOS = BuiltInVariant("losalamos", "rnqknr/pppppp/6/6/PPPPPP/RNQKNR w - - 0 1")
+    CLOBBER = BuiltInVariant("clobber", "PpPpP/pPpPp/PpPpP/pPpPp/PpPpP/pPpPp w 0 1")
+    BREAKTHROUGH = BuiltInVariant("breakthrough", "pppppppp/pppppppp/8/8/8/8/PPPPPPPP/PPPPPPPP w 0 1")
+
+    BUILTINS = (CHESS, NOCASTLE, HOPPELPOPPEL, NEWZEALAND, KNIGHTMATE, ANTICHESS, HORDE, THREECHECK, LOSALAMOS, CLOBBER, BREAKTHROUGH)
 
     STONK_VARIANT = Variant("stonkchess",
                             (

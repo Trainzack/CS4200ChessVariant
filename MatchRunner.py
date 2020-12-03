@@ -66,7 +66,7 @@ class MatchRunner:
 
         matchData = MatchData()
 
-        if variantPath == "":
+        if variantPath == "" and not variant.builtIn:
             variantPath = "variant-{0}.ini".format(variant.name)
             with open(variantPath, "w") as ini:
                 ini.write(variant.getFairyStockfishINI())

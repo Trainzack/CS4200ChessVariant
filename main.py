@@ -12,22 +12,30 @@ blackWinChessMoves = ["f2f3", "e7e5", "g2g4", "d8h4"]
 
 def testEngine():
 
-    evaluateVariant(Variant.StaticVariants.CHESS)
+    results = dict()
+    for v in Variant.StaticVariants.BUILTINS:
+        results[v] = evaluateVariant(v)
+
+    for v, d in results.items():
+        print("Variant {0} results: ".format(v.name))
+        print("\tW/B/D: {0}-{1}-{2}".format(d.whiteWins, d.blackWins, d.draws))
+        print("\tEvaluation: {0}".format(Evaluator.evaluate(d)))
 
 
 
 
 
-def evaluateVariant(variant: Variant):
+def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
     print("Evaluating {0}.".format(variant.name))
-    runner = MatchRunner.MatchRunner(depth=8)
+    runner = MatchRunner.MatchRunner(depth=12)
 
-    matchData = runner.runMatches(variant, 50, debug=False)
-    print(LatexExport.getMatchLatex(matchData.matches[0]))
+    matchData = runner.runMatches(variant, 40, debug=False)
 
     print("W/B/D: {0}-{1}-{2}".format(matchData.whiteWins, matchData.blackWins, matchData.draws))
     print("Evaluation: {0}".format(Evaluator.evaluate(matchData)))
     matchData.dumpPGN("{0}".format(variant.name))
+
+    return(matchData)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':

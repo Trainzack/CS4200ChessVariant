@@ -12,7 +12,7 @@ class Match:
     """
     def __init__(self, variant:Variant, round:int):
         self.moves = []
-        self.FEN = [variant.getStartingFEN()]
+        self.FEN = [variant.startingFEN]
         self.site = socket.gethostname()
         self.match_date=date.today()
         self.variant = variant
@@ -28,18 +28,32 @@ class Match:
         return "{0} Match. {1} turns, result: {2}".format(self.variant.name, len(self.moves), self.result)
 
     def addMove(self, move:str):
+        if move == "(none)":
+            print("Ingoring none move")
+            return
         self.FEN.append(pyffish.get_fen(self.variant.name, self.FEN[-1], [move]))
         self.moves.append(move)
 
+    def gameIsInProgress(self) -> bool:
+        return self.result == "*"
 
     def markWhiteVictory(self):
         self.result = "1-0"
 
+    def isWhiteVictory(self) -> bool:
+        return self.result == "1-0"
+
     def markBlackVictory(self):
         self.result = "0-1"
 
+    def isBlackVictory(self) -> bool:
+        return self.result == "0-1"
+
     def markDraw(self):
         self.result = "1/2-1/2"
+
+    def isDraw(self) -> bool:
+        return self.result == "1/2-1/2"
 
     def getPGN(self) -> str:
         output = "[Event \"Computer Match, Variant: {0}\"]\n".format(self.variant.name)
@@ -61,7 +75,7 @@ class Match:
 
         # output += "[VarientMen \"{0}\"]\n".format(variantMenString) # As WinBoard seems to support
         # output += "[pieceToCharTable \"{0}\"]\n".format(self.variant.getPieceToCharTable())
-        output += "[FEN \"{0}\"]\n".format(self.variant.getStartingFEN())
+        output += "[FEN \"{0}\"]\n".format(self.variant.startingFEN)
         # output += "[SetUp \"1\"]"
 
         # Finally, we need to get the list of moves.

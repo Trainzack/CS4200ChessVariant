@@ -28,6 +28,8 @@ class MonteCarloTreeNode(object):
         # All of the moves leading up to here, including this node's move
         self.previous_moves: List[str] = []
 
+        self.whiteMove = False
+
         if root is None:
             self.root: MonteCarloTreeNode = self
             self.is_root = True
@@ -35,6 +37,7 @@ class MonteCarloTreeNode(object):
             self.root: MonteCarloTreeNode = root
             self.previous_moves = parent.previous_moves.copy()
             self.previous_moves.append(move)
+            self.whiteMove = not parent.whiteMove
 
 
         self.parent: Optional[MonteCarloTreeNode] = parent
@@ -77,6 +80,21 @@ class MonteCarloTreeNode(object):
         if not self.is_root:
             self.parent.markNode(not win if not draw else False, draw) # Alternate wins and lossses up the tree, otherwise
 
+
+    def markWhiteVictory(self):
+        """
+        Marks the result of this match as a white victory. Only call this once per match.
+        :return:
+        """
+        self.markNode(self.whiteMove, False)
+
+    def markBlackVictory(self):
+        """
+        Marks the result of this match as a black victory. Only call this once per match.
+        :return:
+        """
+        self.markNode(not self.whiteMove, False)
+
     def selectionFunction(self, explorationParameter:float=1.41421356237) -> float:
         """
         Use this function to compare multiple children to select the best one during MCTS.
@@ -106,6 +124,10 @@ class MonteCarloTreeNode(object):
             finish = True
 
 
+        if len(self.children.values()) == 0:
+            # Even though we've expanded, we've hit the end of the game!
+            return True, None
+
         bestChild: MonteCarloTreeNode = max(self.children.values(), key=lambda child: child.selectionFunction())
 
         return finish, bestChild
@@ -117,6 +139,15 @@ class MonteCarloTreeNode(object):
             return "MCTS Node. Value {0}/{1}. Move {2} After {3}.".format(self.total_value, self.number_visits, self.move, self.previous_moves)
 
 
+    def writeExportString(self, file, tabDepth = 0) -> None:
+        out = "\t" * tabDepth
+
+        out += "{0}: Value {1}/{2}\n".format(self.move, self.total_value,self.number_visits)
+        file.write(out)
+        for move in self.children:
+            self.children[move].writeExportString(file, tabDepth+1)
+
+
 def testMCT():
     """Tests the MCT, to ensure that we coded it correctly."""
 
@@ -124,20 +155,25 @@ def testMCT():
 
     root = MonteCarloTreeNode(variant, "", None, None)
 
-
-    for i in range(200):
-        print('Test game {0}.'.format(i+1))
-        print(root)
+    depth = 0
+    for i in range(20000):
+        #print('Test game {0}.'.format(i+1))
+        #print(root)
         stop = False
         curNode = root
         while not stop:
             stop, curNode = curNode.selectBestChild()
-            print(curNode)
+            #print(curNode)
 
+        curDepth = len(curNode.previous_moves)
+
+        if curDepth > depth:
+            print("Depth: {0}".format(curDepth))
+            depth=curDepth
 
         draw = i % 5 == 0
         win = i % 2 == 0 and not draw
-        print("Faking game result: {0}".format("win" if win else ("draw" if draw else 'loss')))
+        #print("Faking game result: {0}".format("win" if win else ("draw" if draw else 'loss')))
         curNode.markNode(win, draw)
 
 if __name__ == '__main__':

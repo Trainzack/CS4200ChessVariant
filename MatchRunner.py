@@ -15,7 +15,7 @@ class MatchData:
     """
     def __init__(self, variant:Variant):
         self.variant = variant
-        self.MCTRoot = MonteCarloTreeNode(variant.startingFEN, None)
+        self.MCTRoot = MonteCarloTreeNode(variant, "", None, None)
         self.matches = list()
         self.whiteWins = 0
         self.blackWins = 0
@@ -42,6 +42,15 @@ class MatchData:
                 file.write(match.getPGN())
                 file.write("\n\n")
 
+    def dumpMCT(self, fileName:str):
+        """
+        Dumps the generate MCT into the file
+        :param fileName: The name of the file, without extension (this will create a .txt file)
+        :return: None
+        """
+        with open(fileName + ".txt", "w") as file:
+            self.MCTRoot.writeExportString(file, 0)
+
 class MatchRunner:
     """
     This class runs matches between engines, and records the data in a MatchData class
@@ -67,7 +76,7 @@ class MatchRunner:
         :return:
         """
 
-        matchData = MatchData()
+        matchData = MatchData(variant)
 
         if variantPath == "" and not variant.builtIn:
             variantPath = "variant-{0}.ini".format(variant.name)
@@ -80,8 +89,9 @@ class MatchRunner:
             # Set the engines to the variant we are running.
             e.setVariant(variant, variantPath)
 
-        for matchNo in range(matchCount):
+        # This is the root of our MCT
 
+        for matchNo in range(matchCount):
 
             match = Match(variant, (matchNo + 1))
 
@@ -89,12 +99,16 @@ class MatchRunner:
                 e.newgame()
 
             # Go through a MCTS opening
-            for i in range(4):
-                legal_moves = pyffish.legal_moves(variant.name, variant.startingFEN, match.moves)
 
-                FEN = pyffish.get_fen(variant.name, variant.startingFEN, match.moves)
+            stop = False
+            curNode:MonteCarloTreeNode = matchData.MCTRoot
 
-                if len(legal_moves) == 0:
+            while not stop:
+
+                match.curNode = curNode
+                stop, curNode = curNode.selectBestChild()
+
+                if curNode is None:
                     # Checkmate or stalemate.
 
                     if pyffish.game_result(variant.name, variant.startingFEN, match.moves) == 0:
@@ -106,8 +120,7 @@ class MatchRunner:
                         match.markWhiteVictory()
                     break
 
-                move = legal_moves[random.randint(0,len(legal_moves)-1)]
-                # TODO: Apply MCTS algorithm
+                move = curNode.move
                 match.addMove(move)
 
 

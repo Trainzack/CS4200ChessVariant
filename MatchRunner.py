@@ -45,10 +45,10 @@ class MatchData:
     def dumpMCT(self, fileName:str):
         """
         Dumps the generate MCT into the file
-        :param fileName: The name of the file, without extension (this will create a .txt file)
+        :param fileName: The name of the file, without extension (this will create a .mct file)
         :return: None
         """
-        with open(fileName + ".txt", "w") as file:
+        with open(fileName + ".mct", "w") as file:
             self.MCTRoot.writeExportString(file, 0)
 
 class MatchRunner:

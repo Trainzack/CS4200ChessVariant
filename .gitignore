@@ -127,3 +127,6 @@ dmypy.json
 # FairyStockfish
 *.ini
 *.pgn
+
+# Monte Carlo Tree Search results
+*.mct

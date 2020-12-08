@@ -3,6 +3,7 @@
 from Engine import Engine
 from Variant import Variant
 from Match import Match
+from MCT import MonteCarloTreeNode
 
 import pyffish
 import random
@@ -12,7 +13,9 @@ class MatchData:
     """
     This class contains all the data we get from running matches, ready to be analyzed by an evaluator
     """
-    def __init__(self):
+    def __init__(self, variant:Variant):
+        self.variant = variant
+        self.MCTRoot = MonteCarloTreeNode(variant.startingFEN, None)
         self.matches = list()
         self.whiteWins = 0
         self.blackWins = 0

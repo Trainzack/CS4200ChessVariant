@@ -1,8 +1,14 @@
 import math
+from typing import Optional, Tuple, List, Dict
+
+import pyffish
+
 import Variant
 
-class MonteCarloTreeNode():
-    def __init__(self, variant:Variant, move:str, root:Optional[MonteCarloTreeNode], parent:Optional[MonteCarloTreeNode]=None):
+
+class MonteCarloTreeNode(object):
+    # TODO: Can the root node be it's own __init__, to make all params used in each?
+    def __init__(self, variant:Variant, move:str, root, parent=None):
         """
         Represents a single node in the Mote Carlo Tree Search tree.
         :param variant: The variant that this MCTS tree node is exploring
@@ -11,6 +17,7 @@ class MonteCarloTreeNode():
         :param parent: The MCT node that came before this one.
         """
         self.move = move
+
         self.variant = variant
 
         # True if the children of this node have been created, false otherwise.
@@ -18,14 +25,20 @@ class MonteCarloTreeNode():
 
         self.is_root = False
 
+        # All of the moves leading up to here, including this node's move
+        self.previous_moves: List[str] = []
+
         if root is None:
             self.root: MonteCarloTreeNode = self
             self.is_root = True
         else:
             self.root: MonteCarloTreeNode = root
+            self.previous_moves = parent.previous_moves.copy()
+            self.previous_moves.append(move)
+
 
         self.parent: Optional[MonteCarloTreeNode] = parent
-        self.children = {}
+        self.children: Dict = {}
 
         # The number of games this node has been a part of
         self.number_visits: int = 0
@@ -42,7 +55,7 @@ class MonteCarloTreeNode():
             raise Exception("Can't expand already expanded MCTS node")
         else:
             self.is_expanded = True
-            legal_moves = pyffish.legal_moves(variant.name, variant.startingFEN, match.moves)
+            legal_moves = pyffish.legal_moves(self.variant.name, self.variant.startingFEN, self.previous_moves)
             for move in legal_moves:
                 self.children[move] = MonteCarloTreeNode(self.variant, move, self.root, self)
 
@@ -73,9 +86,59 @@ class MonteCarloTreeNode():
         """
         if self.is_root:
             raise Exception("You cannot (and should not) use the selection function on the root node of a MCT.")
-        exploit = self.total_value / self.number_visits
-        explore = math.sqrt(math.log(self.parent.number_visits) / self.number_visits)
+        exploit = self.total_value / (self.number_visits + 1)
+        explore = math.sqrt(math.log(self.parent.number_visits + 1) / (self.number_visits + 1))
 
         return exploit + explorationParameter * explore
 
+    def selectBestChild(self) -> Tuple:
+        """
+        Select the current best child for us to go down when exploring the MCTS tree.
+        :return: A tuple containing two values:
+        1) A boolean that is True when the node returned should no longer be explored with MCTS,
+         and instead explored with stockfish.
+        2) The next node to explore.
+        """
+        finish: bool = False
 
+        if not self.is_expanded:
+            self.expand()
+            finish = True
+
+
+        bestChild: MonteCarloTreeNode = max(self.children.values(), key=lambda child: child.selectionFunction())
+
+        return finish, bestChild
+
+    def __str__(self):
+        if self.is_root:
+            return "MCTS Root. Value {0}/{1}".format(self.total_value, self.number_visits)
+        else:
+            return "MCTS Node. Value {0}/{1}. Move {2} After {3}.".format(self.total_value, self.number_visits, self.move, self.previous_moves)
+
+
+def testMCT():
+    """Tests the MCT, to ensure that we coded it correctly."""
+
+    variant = Variant.StaticVariants.CHESS
+
+    root = MonteCarloTreeNode(variant, "", None, None)
+
+
+    for i in range(200):
+        print('Test game {0}.'.format(i+1))
+        print(root)
+        stop = False
+        curNode = root
+        while not stop:
+            stop, curNode = curNode.selectBestChild()
+            print(curNode)
+
+
+        draw = i % 5 == 0
+        win = i % 2 == 0 and not draw
+        print("Faking game result: {0}".format("win" if win else ("draw" if draw else 'loss')))
+        curNode.markNode(win, draw)
+
+if __name__ == '__main__':
+    testMCT()

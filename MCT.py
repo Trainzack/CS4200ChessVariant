@@ -19,19 +19,19 @@ class MonteCarloTreeNode():
         self.is_root = False
 
         if root is None:
-            self.root = self
+            self.root: MonteCarloTreeNode = self
             self.is_root = True
         else:
-            self.root = root
+            self.root: MonteCarloTreeNode = root
 
-        self.parent = parent
+        self.parent: Optional[MonteCarloTreeNode] = parent
         self.children = {}
 
         # The number of games this node has been a part of
         self.number_visits: int = 0
 
         # The number of wins + 1/2 of the number of draws of the player that played this move in all games it's been in
-        self.total_value:int = 0
+        self.total_value: int = 0
 
     def expand(self):
         """
@@ -46,6 +46,23 @@ class MonteCarloTreeNode():
             for move in legal_moves:
                 self.children[move] = MonteCarloTreeNode(self.variant, move, self.root, self)
 
+    def markNode(self, win:bool, draw:bool):
+        """
+        Mark the result of this node, and all parent nodes.
+        You should only need to call this once per match.
+        Take care that you get win correct depending on the team that did this node.
+        :param win: True if this node was a win, false if loss or draw
+        :param draw: True if this node was a draw, false if win or loss
+        :return:
+        """
+        self.number_visits += 1
+        if win:
+            self.total_value += 1
+        elif draw:
+            self.total_value += 0.5
+
+        if not self.is_root:
+            self.parent.markNode(not win if not draw else False, draw) # Alternate wins and lossses up the tree, otherwise
 
     def selectionFunction(self, explorationParameter:float=1.41421356237) -> float:
         """

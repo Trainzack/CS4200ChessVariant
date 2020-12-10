@@ -1,5 +1,6 @@
 import socket
 from datetime import date
+import MCT
 
 import pyffish
 
@@ -17,6 +18,9 @@ class Match:
         self.match_date=date.today()
         self.variant = variant
         self.round = round
+
+        # The current (or last) MCTS node
+        self.curNode: MCT.MonteCarloTreeNode = None
         # Valid values for result:
         #    "1-0" (White wins)
         #    "0-1" (Black wins)
@@ -39,18 +43,21 @@ class Match:
 
     def markWhiteVictory(self):
         self.result = "1-0"
+        self.curNode.markWhiteVictory()
 
     def isWhiteVictory(self) -> bool:
         return self.result == "1-0"
 
     def markBlackVictory(self):
         self.result = "0-1"
+        self.curNode.markBlackVictory()
 
     def isBlackVictory(self) -> bool:
         return self.result == "0-1"
 
     def markDraw(self):
         self.result = "1/2-1/2"
+        self.curNode.markNode(False, True)
 
     def isDraw(self) -> bool:
         return self.result == "1/2-1/2"

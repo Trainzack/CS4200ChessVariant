@@ -12,16 +12,25 @@ stalemateChessMoves = ["h2h4", "e7e5", "h1h3", "d8h4", "a2a4", "h4g4", "h3a3", "
 whitwWinChessMoves = ["e2e4", "f7f6", "d2d3", "g7g5", "d1h5"]
 blackWinChessMoves = ["f2f3", "e7e5", "g2g4", "d8h4"]
 
-def testEngine():
+def testEngine(depth=10, matches=10):
 
-    results = dict()
-    for v in Variant.StaticVariants.BUILTINS:
-        results[v] = evaluateVariant(v)
+    with open("RESULTS.txt", "a") as file:
+        file.write("Results file!\n")
+        file.write("Engine depth: {0}\n".format(depth))
+        file.write("Matches per variant: {0}\n".format(matches))
+        file.write("\n")
 
-    for v, d in results.items():
-        print("Variant {0} results: ".format(v.name))
-        print("\tW/B/D: {0}-{1}-{2}".format(d.whiteWins, d.blackWins, d.draws))
-        print("\tEvaluation: {0}".format(Evaluator.evaluate(d)))
+        results = dict()
+        for v in Variant.StaticVariants.BUILTINS:
+            results[v] = evaluateVariant(v)
+            file.write("Variant {0} results: ".format(v.name))
+            file.write("\tW/B/D: {0}-{1}-{2}".format(d.whiteWins, d.blackWins, d.draws))
+            file.write("\tEvaluation: {0}".format(Evaluator.evaluate(d)))
+
+        for v, d in results.items():
+            print("Variant {0} results: ".format(v.name))
+            print("\tW/B/D: {0}-{1}-{2}".format(d.whiteWins, d.blackWins, d.draws))
+            print("\tEvaluation: {0}".format(Evaluator.evaluate(d)))
 
 
 
@@ -31,7 +40,7 @@ def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
     print("Evaluating {0}.".format(variant.name))
     runner = MatchRunner.MatchRunner(depth=10)
 
-    matchData = runner.runMatches(variant, 100, debug=False)
+    matchData = runner.runMatches(variant, 1000, debug=False)
 
     print("W/B/D: {0}-{1}-{2}".format(matchData.whiteWins, matchData.blackWins, matchData.draws))
     print("Evaluation: {0}".format(Evaluator.evaluate(matchData)))
@@ -42,8 +51,8 @@ def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    #testEngine()
-    start = time.time()
-    Genetics.runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestA", matchCount=40, depth=10, epoch=8)
-    print("Elapsed Time:", (time.time() - start) / 60, "minutes.")
+    testEngine(depth=1, matches=1)
+    #start = time.time()
+    #Genetics.runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestA", matchCount=40, depth=10, epoch=8)
+    #print("Elapsed Time:", (time.time() - start) / 60, "minutes.")
 

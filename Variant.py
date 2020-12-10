@@ -18,7 +18,7 @@ def pieceTupleToFENString(pieceTuple: Tuple[Tuple[Optional[Piece.Piece], Optiona
     out = ""
 
     pieceNames = {v: k for k, v in variantMen.items()}
-
+    #print(pieceNames)
     for i, row in enumerate(pieceTuple):
         emptyCount = 0
         for piece in row:
@@ -76,8 +76,8 @@ class Variant:
 
             availableChars.replace(nextChar, "")
             self.variantMen[nextChar] = piece
-
-        self.startingFEN = pieceTupleToFENString(startingPosition, self.variantMen) + " w KQkq - 0 1"
+        #print(len(self.variantMen), self.variantMen)
+        self.startingFEN = pieceTupleToFENString(startingPosition, self.variantMen) + " w - - 0 1"
 
         self.iniFlags = iniFlags if iniFlags is not None else []
 

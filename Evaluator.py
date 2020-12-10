@@ -19,16 +19,16 @@ def evaluate(data: MatchData) -> float:
 def winLossDrawEvaluation(wins: int, losses: int, draws: int) -> float:
 
     drawRatio = draws/(wins + losses + draws)
-
+    halfDraws = draws/2
     winRatio = 0
 
     # The win Ratio is the ratio between times the side that tends to lose loses and does not loose.
     # If both are equal, then ratio is 1. If both sides never win, then the ratio is 0.
 
     if wins > losses:
-        winRatio = losses / wins
+        winRatio = (losses + halfDraws) / (wins + halfDraws)
     elif losses > wins:
-        winRatio = wins / losses
+        winRatio = (wins + halfDraws) / (losses + halfDraws)
     elif losses != 0 and wins != 0:
         winRatio = 1
     else:

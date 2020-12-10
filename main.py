@@ -27,9 +27,9 @@ def testEngine():
 
 def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
     print("Evaluating {0}.".format(variant.name))
-    runner = MatchRunner.MatchRunner(depth=1)
+    runner = MatchRunner.MatchRunner(depth=10)
 
-    matchData = runner.runMatches(variant, 2, debug=False)
+    matchData = runner.runMatches(variant, 100, debug=False)
 
     print("W/B/D: {0}-{1}-{2}".format(matchData.whiteWins, matchData.blackWins, matchData.draws))
     print("Evaluation: {0}".format(Evaluator.evaluate(matchData)))

@@ -142,11 +142,21 @@ class MonteCarloTreeNode(object):
     def writeExportString(self, file, tabDepth = 0) -> None:
         out = "\t" * tabDepth
 
-        out += "{0}: Value {1}/{2}\n".format(self.move, self.total_value,self.number_visits)
+        out += "{0}: Value {1}/{2}\n".format(self.move if not self.is_root else "Root", self.total_value,self.number_visits)
         file.write(out)
-        for move in self.children:
-            self.children[move].writeExportString(file, tabDepth+1)
-
+        unexpanded = []
+        for node in self.children.values():
+            if node.is_expanded:
+                node.writeExportString(file, tabDepth+1)
+            else:
+                unexpanded.append(node)
+        out = "\t" * (tabDepth + 1) + "{0} Unexpanded".format(len(unexpanded))
+        if len(unexpanded) > 0:
+            out += ":"
+            for node in unexpanded:
+                out += " {0}".format(node.move)
+        out += "\n"
+        file.write(out)
 
 def testMCT():
     """Tests the MCT, to ensure that we coded it correctly."""

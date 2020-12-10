@@ -273,7 +273,7 @@ def runPopultion(pop, matchCount, depth):
     return pop
 
 def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch):
-    childCount = popSize * 2 // 3
+    childCount = popSize // 2 #* 2 // 3
     parentCount = popSize - childCount
     popVariants = createPopulation(popSize, pieces,prefix)
     parents = []
@@ -306,8 +306,12 @@ def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch):
         for board in pop:
             popVariants.append(getGeneticVariant(prefix + "_" + str(generationIndex+1) + "_" + str(variantIndex),board[0],generationIndex,board[1]))
             variantIndex += 1
-    for variant in generations:
-        print(variant)
+    with open(prefix + ".csv", "w") as file:
+
+        for variant in generations:
+            print(variant)
+            file.write(str(variant))
+            file.write("\n")
 
 
 def evaluateVariant(variant: Variant, matchCount, depth) -> MatchRunner.MatchData:
@@ -319,6 +323,7 @@ def evaluateVariant(variant: Variant, matchCount, depth) -> MatchRunner.MatchDat
     print("W/B/D: {0}-{1}-{2}".format(matchData.whiteWins, matchData.blackWins, matchData.draws))
     print("Evaluation: {0}".format(Evaluator.evaluate(matchData)))
     matchData.dumpPGN("{0}".format(variant.name))
+    matchData.dumpMCT("{0}-MCT".format(variant.name))
 
     return(matchData)
 

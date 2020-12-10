@@ -41,5 +41,5 @@ class GeneticVariant:
         results = self.evaluations
         # for i in range(len(self.evaluations)):
         #     results += "Score: " + str(self.evaluations) + " "
-        return "{0} {1} {2} depth: {3} matchCount: {4} results: {5}".format(self.ID,startingFEN, parents, self.depths, self.matchCounts, results)
+        return "{0}, {1}, {2}, depth: {3}, matchCount: {4}, results: {5}".format(self.ID,startingFEN, parents, self.depths, self.matchCounts, results)
 

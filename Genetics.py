@@ -2,8 +2,11 @@ from typing import Dict, List, Tuple, Optional
 import Piece
 import random
 import MatchRunner
-import Variant
+from Variant import Variant
 import Evaluator
+import time
+#from GeneticVariant import GeneticVariant
+from GeneticVariant import GeneticVariant
 #population setup
 
 def fitness(pop) -> list:
@@ -26,8 +29,9 @@ def combineBoards(parents, childCount, combineType, king) -> list:
     #combineTypes are halfAndHalf or Folded: combine left half of parent A with right half of parent B or take every other file from parent A then parent B
     #if no king or two are present after combining, average the location of both parents, or randomly pick one.
     #combining pattern, parentA with parentB, parentB with parentC...until childCount is met
-    rows = len(parents[0])
-    crossover_point = len(parents[0][0])//2
+
+    rows = len(parents[0].board)
+    crossover_point = len(parents[0].board[0])//2
     #print(rows,crossover_point)
     children = []
     if combineType == "halfAndHalf":
@@ -35,33 +39,37 @@ def combineBoards(parents, childCount, combineType, king) -> list:
             parentAidx = i % len(parents)
             parentBidx = (i+1) % len(parents)
             child = []
-            for row in parents[parentAidx]:
+            for row in parents[parentAidx].board:
                 child.append(row.copy())
             for row in range(rows):
-                child[row][crossover_point:] = parents[parentBidx][row][crossover_point:]
+                child[row][crossover_point:] = parents[parentBidx].board[row][crossover_point:]
 
             #check that there is just one king
-            kingA = findKing(parents[parentAidx], king)
-            kingB = findKing(parents[parentBidx], king)
-            print(kingA[1], kingB[1])
-            if kingA[1] >= crossover_point and kingB[1] < crossover_point:
-                if random.randint(0,1) == 0:
-                    child[kingA[0]][kingA[1]] = king
-                else:
-                    child[kingB[0]][kingB[1]] = king
-                print("king added")
-            elif kingB[1] >= crossover_point > kingA[1]:
-                if random.randint(0, 1) == 0:
-                    child[kingB[0]][kingB[1]] = parents[parentAidx][kingB[0]][kingB[1]]
-                else:
-                    child[kingA[0]][kingA[1]] = parents[parentBidx][kingA[0]][kingA[1]]
-                print("king removed")
+            checkKingPlacement([parents[parentAidx].board,parents[parentBidx].board], child, (0,3), crossover_point, king)
+            checkKingPlacement([parents[parentAidx].board, parents[parentBidx].board], child, (4, 7), crossover_point, king)
 
-            children.append(child)
+            children.append([child, [parents[parentAidx].ID,parents[parentBidx].ID]])
+
+            #printTest(convertToTuple(child))
     elif combineType == "folded":
         pass
     return children
-
+def checkKingPlacement(parents, child, ranks, crossover_point, king):
+    kingA = findKing(parents[0], king, ranks)
+    kingB = findKing(parents[1], king, ranks)
+    #print(kingA[1], kingB[1])
+    if kingA[1] >= crossover_point and kingB[1] < crossover_point:
+        if random.randint(0, 1) == 0:
+            child[kingA[0]][kingA[1]] = king
+        else:
+            child[kingB[0]][kingB[1]] = king
+        #print("king added")
+    elif kingB[1] >= crossover_point > kingA[1]:
+        if random.randint(0, 1) == 0:
+            child[kingB[0]][kingB[1]] = parents[0][kingB[0]][kingB[1]]
+        else:
+            child[kingA[0]][kingA[1]] = parents[1][kingA[0]][kingA[1]]
+        #print("king removed")
 #mutations
 def mutatePieces(children, changeCount, pieces, king) -> list:
     #randomly select piece to change to a random piece
@@ -69,20 +77,20 @@ def mutatePieces(children, changeCount, pieces, king) -> list:
     for child in children:
         remaingMutants = changeCount
         while(remaingMutants > 0):
-            kingLoc = findKing(child, king)
+            kingLoc = findKing(child[0], king, (0,3))
             randPos = getRandomLoc(0,3,0,7)
 
-            currentPiece = child[randPos[0]][randPos[1]]
+            currentPiece = child[0][randPos[0]][randPos[1]]
             if currentPiece != None and currentPiece != king:
-                child[randPos[0]][randPos[1]] = getRandomPiece(pieces, [king])
+                child[0][randPos[0]][randPos[1]] = getRandomPiece(pieces, [king])
                 remaingMutants -= 1
         remaingMutants = changeCount
         while (remaingMutants > 0):
-            kingLoc = findKing(child, king)
+            kingLoc = findKing(child[0], king, (4,7))
             randPos = getRandomLoc(4, 7, 0, 7)
-            currentPiece = child[randPos[0]][randPos[1]]
+            currentPiece = child[0][randPos[0]][randPos[1]]
             if currentPiece != None and currentPiece != king:
-                child[randPos[0]][randPos[1]] = getRandomPiece(pieces, [king])
+                child[0][randPos[0]][randPos[1]] = getRandomPiece(pieces, [king])
                 remaingMutants -= 1
 
     return children
@@ -96,6 +104,7 @@ def shufflePieces(children, shuffleCount, king) -> list:
 
 
     #childList = convertToList(child)
+    newChildren = []
     for childList in children:
         random.randint(0, 1)
         remainingShuffles = shuffleCount
@@ -107,11 +116,13 @@ def shufflePieces(children, shuffleCount, king) -> list:
             while True:
                 randRow1 = random.randint(0, 1)
                 randCol1 = random.randint(0, 7)
-                piece1 = childList[randRow1][randCol1]
+                piece1 = childList[0][randRow1][randCol1]
 
                 randRow2 = random.randint(0, 1)
                 randCol2 = random.randint(0, 7)
-                piece2 = childList[randRow2][randCol2]
+                piece2 = childList[0][randRow2][randCol2]
+
+                #print(len(children),remainingShuffles,piece1, piece2)
 
                 if piece1 == piece2:
                     #swapping the same piece won't change anything
@@ -125,8 +136,8 @@ def shufflePieces(children, shuffleCount, king) -> list:
                         continue
 
                 #when no problems with king swap then break
-                childList[randRow1][randCol1] = piece2
-                childList[randRow2][randCol2] = piece1
+                childList[0][randRow1][randCol1] = piece2
+                childList[0][randRow2][randCol2] = piece1
 
                 logBlack = logBlack + "black side swapped " + piece2.name + " with " + piece1.name + "\n"
                 break
@@ -135,11 +146,11 @@ def shufflePieces(children, shuffleCount, king) -> list:
             while True:
                 randRow1 = random.randint(0, 1) + 6
                 randCol1 = random.randint(0, 7)
-                piece1 = childList[randRow1][randCol1]
+                piece1 = childList[0][randRow1][randCol1]
 
                 randRow2 = random.randint(0, 1) + 6
                 randCol2 = random.randint(0, 7)
-                piece2 = childList[randRow2][randCol2]
+                piece2 = childList[0][randRow2][randCol2]
                 if piece1 == piece2:
                     #swapping the same piece won't change anything
                     #try again and pick two different pieces
@@ -151,8 +162,8 @@ def shufflePieces(children, shuffleCount, king) -> list:
                         continue
 
                 # when no problems with king swap then break
-                childList[randRow1][randCol1] = piece2
-                childList[randRow2][randCol2] = piece1
+                childList[0][randRow1][randCol1] = piece2
+                childList[0][randRow2][randCol2] = piece1
 
                 logWhite = logWhite + "white side swapped " + piece2.name + " with " + piece1.name + "\n"
                 break
@@ -162,8 +173,8 @@ def shufflePieces(children, shuffleCount, king) -> list:
         #print(logBlack)
         #print(logWhite)
         #childTuple = convertToTuple(childList)
-        children.append(childList)
-    return children
+        newChildren.append(childList)
+    return newChildren
 
 def getRandomLoc(rankMin, rankMax, fileMin, fileMax):
     rank = random.randint(rankMin, rankMax)
@@ -178,8 +189,8 @@ def getRandomPiece(pieces, excludedPieces):
 
 
 
-def findKing(board: List[List], king) -> tuple:
-    for i in range(len(board)):
+def findKing(board: List[List], king, ranks) -> tuple:
+    for i in range(ranks[0], ranks[1]+1):
         for j in range(len(board[0])):
             if board[i][j] == king:
                 return (i,j)
@@ -230,20 +241,22 @@ def getRandomBoard(size, pieces, whiteRanks, blackRanks, king):
     board[blackKingLoc[0]][blackKingLoc[1]] = king
     return board
 
+
 def getRandomVariant(name, size, pieces, whiteRanks, blackRanks, king):
     randomBoard = getRandomBoard(size,pieces,whiteRanks,blackRanks,king)
-    return  getGeneticVariant(name, randomBoard)
+    return  getGeneticVariant(name, randomBoard, 0, None)
 
-def getGeneticVariant(name, board):
+def getGeneticVariant(name, board, generation, parents):
     pieceList = []
     for row in range(len(board)):
         for piece in board[row]:
             if piece != None and piece not in pieceList:
                 pieceList.append(piece)
                 # print(piece.name, piece)
-    printTest(convertToTuple(board))
+    #printTest(convertToTuple(board))
     # print(len(pieceList), pieceList)
-    return [Variant.Variant(name, convertToTuple(board), pieceList), board]
+    variant = Variant(name, convertToTuple(board), pieceList)
+    return GeneticVariant(name,variant, board,generation,parents)
 
 def createPopulation(popSize, pieces, prefix):
     pop = []
@@ -253,31 +266,48 @@ def createPopulation(popSize, pieces, prefix):
 
 def runPopultion(pop, matchCount, depth):
     for variant in pop:
-        variant.append(Evaluator.evaluate(evaluateVariant(variant[0], matchCount, depth)))
+        evaluation = Evaluator.evaluate(evaluateVariant(variant.variant, matchCount, depth))
+        #print("Evaluation Added", evaluation)
+        variant.addEvaluation(evaluation, depth,matchCount)
+
     return pop
 
 def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch):
-    childCount = popSize // 3
+    childCount = popSize * 2 // 3
     parentCount = popSize - childCount
     popVariants = createPopulation(popSize, pieces,prefix)
+    parents = []
+    generations = []
+    #run for number of epochs
     for generationIndex in range(epoch):
+        generations += popVariants
         runPopultion(popVariants,matchCount,depth)
         pop = []
         ranking = []
+        #pull out boards and ranking for child generation
         for variant in popVariants:
-            pop.append(variant[1])
-            ranking.append(variant[2])
+            pop.append(variant)
+            ranking.append(variant.getScore())
+
+        #add parents from previous generation to the current population for ranking evaluation
+        for parent in parents:
+            pop.append(parent)
+            ranking.append(parent.getScore())
+
         parents = selectParents(pop, ranking, parentCount)
         children = combineBoards(parents, childCount, "halfAndHalf", Piece.KING)
-        print(children, childCount)
+        #print(children, childCount)
         children = shufflePieces(children, 5, Piece.KING)
         children = mutatePieces(children,5,pieces,Piece.KING)
-        pop = parents + children
+        #pop = parents + children
+        pop = children.copy()
         popVariants = []
         variantIndex = 0
         for board in pop:
-            popVariants.append(getGeneticVariant(prefix + "_" + str(generationIndex+1) + "_" + str(variantIndex)))
+            popVariants.append(getGeneticVariant(prefix + "_" + str(generationIndex+1) + "_" + str(variantIndex),board[0],generationIndex,board[1]))
             variantIndex += 1
+    for variant in generations:
+        print(variant)
 
 
 def evaluateVariant(variant: Variant, matchCount, depth) -> MatchRunner.MatchData:
@@ -292,43 +322,5 @@ def evaluateVariant(variant: Variant, matchCount, depth) -> MatchRunner.MatchDat
 
     return(matchData)
 
-# A = [6,7,8,3]
-# print(max(A))
-# print(A[0:2], A[2:])
 
-# parents = [[[1,2,3,"k"],[5,6,7,8]], [["k",10,11,12],[13,14,15,16]]]
-# print(parents)
-# children = combineBoards(parents,2, "halfAndHalf", "k")
-# print(findKing(parents[0], "k"))
-#
-#
-# print(children)
-# print(parents)
-# print(random.randint(0,1))
 
-#standard board for testing
-shuffleTest = convertToList(((Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(None, None, None, None, None, None, None, None),(Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN, Piece.PAWN),(Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK)))
-printTest(shuffleTest)
-print("")
-printTest(shufflePieces([shuffleTest], 50, Piece.KING))
-# mutateTest = [convertToList(shuffleTest)]
-#
-# mutatePieces(mutateTest, 5, Piece.Piece.pieces, Piece.KING)
-# mutateTest[0][5][5] = Piece.KING
-# printTest(mutateTest[0])
-#
-# randBoard = getRandomBoard((8,8),Piece.Piece.pieces,(0,1),(6,7), Piece.KING)
-#
-# printTest(convertToTuple(randBoard))
-
-pieces = [Piece.ROOK, Piece.KNIGHT, Piece.BISHOP, Piece.QUEEN, Piece.KING, Piece.BISHOP, Piece.KNIGHT, Piece.ROOK]
-# randVariant = getRandomVariant("test", (8,8),Piece.Piece.pieces,(0,1),(6,7), Piece.KING)
-# result = Evaluator.evaluate(evaluateVariant(randVariant))
-# print(result)
-
-# pop = createPopulation(2, Piece.Piece.pieces, "TestA")
-# runPopultion(pop, 40, 12)
-# for variant in pop:
-#     print(variant[2])
-
-#runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestB", matchCount=2, depth=5, epoch=2)

@@ -5,6 +5,8 @@ import Match
 import MatchRunner
 import LatexExport
 import Evaluator
+import time
+import Genetics
 
 stalemateChessMoves = ["h2h4", "e7e5", "h1h3", "d8h4", "a2a4", "h4g4", "h3a3", "g4g2", "c2c3", "g2g1", "d1b3", "g1f2", "e1d1", "f2f1", "d1c2", "f1e2", "b3a2", "a7a5", "c2b3", "e2d3"]
 whitwWinChessMoves = ["e2e4", "f7f6", "d2d3", "g7g5", "d1h5"]
@@ -39,5 +41,8 @@ def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    testEngine()
+    #testEngine()
+    start = time.time()
+    Genetics.runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestE", matchCount=4, depth=5, epoch=4)
+    print("Elapsed Time:", (time.time() - start) / 60, "minutes.")
 

@@ -140,16 +140,31 @@ class MonteCarloTreeNode(object):
 
 
     def writeExportString(self, file, tabDepth = 0) -> None:
+        """
+        Write a human-redable MCT tree into the given file.
+        This function recursively calls this function on it's children.
+        :param file: The file that we want to write into (get with open())
+        :param tabDepth: How many tabs should this subtree be indented.
+        :return:
+        """
         out = "\t" * tabDepth
 
         out += "{0}: Value {1}/{2}\n".format(self.move if not self.is_root else "Root", self.total_value,self.number_visits)
         file.write(out)
+        expanded = []
         unexpanded = []
         for node in self.children.values():
             if node.is_expanded:
-                node.writeExportString(file, tabDepth+1)
+                expanded.append(node)
             else:
                 unexpanded.append(node)
+
+        # Sort the tree so that the best moves are listed first.
+        expanded.sort(key=lambda x: x.total_value / x.number_visits, reverse=True)
+
+        for node in expanded:
+            node.writeExportString(file, tabDepth + 1)
+
         out = "\t" * (tabDepth + 1) + "{0} Unexpanded".format(len(unexpanded))
         if len(unexpanded) > 0:
             out += ":"
@@ -185,6 +200,9 @@ def testMCT():
         win = i % 2 == 0 and not draw
         #print("Faking game result: {0}".format("win" if win else ("draw" if draw else 'loss')))
         curNode.markNode(win, draw)
+
+    with open("fake_test.mct", "w") as file:
+        root.writeExportString(file)
 
 if __name__ == '__main__':
     testMCT()

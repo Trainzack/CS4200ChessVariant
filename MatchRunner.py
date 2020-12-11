@@ -102,9 +102,9 @@ class MatchRunner:
 
             stop = False
             curNode:MonteCarloTreeNode = matchData.MCTRoot
-
+            i=0
             while not stop:
-
+                i+=1
                 match.curNode = curNode
                 stop, curNode = curNode.selectBestChild()
 

@@ -272,7 +272,7 @@ def runPopultion(pop, matchCount, depth):
 
     return pop
 
-def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch):
+def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch, shuffleCount=5, mutationCount=5):
     childCount = popSize // 2 #* 2 // 3
     parentCount = popSize - childCount
     popVariants = createPopulation(popSize, pieces,prefix)
@@ -297,8 +297,8 @@ def runGenetic(popSize, pieces, prefix, matchCount, depth, epoch):
         parents = selectParents(pop, ranking, parentCount)
         children = combineBoards(parents, childCount, "halfAndHalf", Piece.KING)
         #print(children, childCount)
-        children = shufflePieces(children, 5, Piece.KING)
-        children = mutatePieces(children,5,pieces,Piece.KING)
+        children = shufflePieces(children, shuffleCount, Piece.KING)
+        children = mutatePieces(children,mutationCount,pieces,Piece.KING)
         #pop = parents + children
         pop = children.copy()
         popVariants = []

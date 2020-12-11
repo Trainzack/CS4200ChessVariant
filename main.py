@@ -44,6 +44,6 @@ def evaluateVariant(variant: Variant) -> MatchRunner.MatchData:
 if __name__ == '__main__':
     #testEngine()
     start = time.time()
-    Genetics.runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestA", matchCount=40, depth=10, epoch=8)
+    Genetics.runGenetic(popSize=6, pieces=Piece.Piece.pieces, prefix="TestD", matchCount=100, depth=10, epoch=8, shuffleCount=2, mutationCount=2)
     print("Elapsed Time:", (time.time() - start) / 60, "minutes.")
 
